@@ -62,8 +62,10 @@ with open("agent_messages/log.jsonl", "a") as f:
 
 EOF
 
-      - name: Commit agent log
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Multi-agent scheduler tick"
-          file_pattern: agent_messages/log.jsonl
+- name: Commit agent log
+  if: github.event_name != 'push'
+  uses: stefanzweifel/git-auto-commit-action@v5
+  with:
+    commit_message: "Multi-agent scheduler tick"
+    file_pattern: agent_messages/log.jsonl
+
