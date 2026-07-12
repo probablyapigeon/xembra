@@ -2,15 +2,22 @@ name: XEMBRA Heartbeat
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # every 10 minutes
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
   tick:
     runs-on: ubuntu-latest
+
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Ensure curl is installed
+        run: sudo apt-get update && sudo apt-get install -y curl
+
       - name: Send heartbeat
         run: |
-          curl -X POST "https://probablyaphilosopher-xembra.hf.space/chat" \
+          curl -X POST "https://PROBABLYAPHILOSOPHER-XEMBRA.hf.space/chat" \
             -H "Content-Type: application/json" \
             -d '{"name":"system","message":"[TICK]"}'
