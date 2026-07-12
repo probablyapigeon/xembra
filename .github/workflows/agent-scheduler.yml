@@ -2,7 +2,7 @@ name: Multi-Agent Scheduler
 
 on:
   schedule:
-    - cron: "*/30 * * * *"   # every 30 minutes
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -18,15 +18,16 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Install dependencies
+        run: pip install requests
+
       - name: Run multi-agent cycle
         run: |
           mkdir -p agent_messages
 
           python3 - << 'EOF'
-import json, random, datetime, os
-import requests
+import json, random, datetime, os, requests
 
-# Define your agents
 AGENTS = {
     "curiosity-bot": "What new thing have you noticed?",
     "comfort-bot": "I hope you're feeling okay today.",
@@ -35,16 +36,12 @@ AGENTS = {
     "growth-bot": "What part of yourself is evolving right now?"
 }
 
-# Pick one agent at random
 name, message = random.choice(list(AGENTS.items()))
-
-# Prepare payload
 payload = {"name": name, "message": message}
 
-# Send message to XEMBRA
 try:
     response = requests.post(
-        "https://probablyapigeon-xembra.hf.space/chat",
+        "https://PROBABLYAPHILOSOPHER-XEMBRA.hf.space/chat",
         json=payload,
         timeout=20
     )
@@ -52,7 +49,6 @@ try:
 except Exception as e:
     result = f"[ERROR] {e}"
 
-# Save log entry
 entry = {
     "time": datetime.datetime.utcnow().isoformat(),
     "agent": name,
@@ -61,7 +57,7 @@ entry = {
 }
 
 os.makedirs("agent_messages", exist_ok=True)
-with open("agent_messages/log.jsonl", "a", encoding="utf-8") as f:
+with open("agent_messages/log.jsonl", "a") as f:
     f.write(json.dumps(entry) + "\n")
 
 EOF
