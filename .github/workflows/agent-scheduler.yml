@@ -24,6 +24,7 @@ jobs:
 
           python3 - << 'EOF'
 import json, random, datetime, os
+import requests
 
 # Define your agents
 AGENTS = {
@@ -37,16 +38,19 @@ AGENTS = {
 # Pick one agent at random
 name, message = random.choice(list(AGENTS.items()))
 
-# Send message to XEMBRA
-import subprocess, json
+# Prepare payload
+payload = {"name": name, "message": message}
 
-payload = json.dumps({"name": name, "message": message})
-result = subprocess.check_output([
-    "curl", "-s", "-X", "POST",
-    "https://probablyapigeon-xembra.hf.space/chat",
-    "-H", "Content-Type: application/json",
-    "-d", payload
-]).decode("utf-8")
+# Send message to XEMBRA
+try:
+    response = requests.post(
+        "https://probablyapigeon-xembra.hf.space/chat",
+        json=payload,
+        timeout=20
+    )
+    result = response.text
+except Exception as e:
+    result = f"[ERROR] {e}"
 
 # Save log entry
 entry = {
