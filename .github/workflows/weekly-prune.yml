@@ -2,7 +2,7 @@ name: Weekly Memory Prune
 
 on:
   schedule:
-    - cron: "0 4 * * 0"   # every Sunday at 4 AM UTC
+    - cron: "0 0 * * 0"
   workflow_dispatch:
 
 jobs:
@@ -18,38 +18,19 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Prune memory logs
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run prune
         run: |
-          mkdir -p creature_saves
+          python3 - << 'EOF'
+import requests
 
-          for FILE in creature_saves/*.json; do
-            echo "Processing $FILE"
-
-            python3 - << 'EOF'
-import json, sys
-
-path = sys.argv[1]
-
-try:
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-except Exception:
-    sys.exit(0)
-
-# prune memory_log to last 100 entries
-mem = data.get("memory_log", [])
-if isinstance(mem, list) and len(mem) > 100:
-    data["memory_log"] = mem[-100:]
-
-with open(path, "w", encoding="utf-8") as f:
-    json.dump(data, f, indent=2)
+payload = {"name": "system", "message": "[PRUNE]"}
+requests.post(
+    "https://PROBABLYAPHILOSOPHER-XEMBRA.hf.space/chat",
+    json=payload,
+    timeout=20
+)
 
 EOF
-            "$FILE"
-          done
-
-      - name: Commit pruned memory
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Weekly memory prune"
-          file_pattern: creature_saves/*.json
