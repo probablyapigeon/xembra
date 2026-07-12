@@ -1,0 +1,16 @@
+name: XEMBRA Heartbeat
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # every 10 minutes
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send heartbeat
+        run: |
+          curl -X POST "https://probablyaphilosopher-xembra.hf.space/chat" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"system","message":"[TICK]"}'
