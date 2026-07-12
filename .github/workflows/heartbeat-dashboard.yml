@@ -2,7 +2,7 @@ name: Heartbeat Dashboard
 
 on:
   schedule:
-    - cron: "0 * * * *"   # every hour
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -18,62 +18,34 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Install dependencies
+        run: pip install requests
+
       - name: Generate dashboard
         run: |
           mkdir -p dashboard
 
           python3 - << 'EOF'
-import json, os, datetime
+import json, requests, datetime
 
-# Load agent visit log
-visits = []
-if os.path.exists("agent_visits.jsonl"):
-    with open("agent_visits.jsonl", "r", encoding="utf-8") as f:
-        for line in f:
-            try:
-                visits.append(json.loads(line))
-            except:
-                pass
+payload = {"name": "system", "message": "[DASHBOARD]"}
+response = requests.post(
+    "https://PROBABLYAPHILOSOPHER-XEMBRA.hf.space/chat",
+    json=payload,
+    timeout=20
+)
 
-# Load creature state (system.json or whatever name you use)
-state_file = None
-for f in os.listdir("creature_saves"):
-    if f.endswith(".json"):
-        state_file = os.path.join("creature_saves", f)
-        break
+html = f"""
+<html>
+<body>
+<h1>XEMBRA Dashboard</h1>
+<p>Last update: {datetime.datetime.utcnow().isoformat()}</p>
+<pre>{response.text}</pre>
+</body>
+</html>
+"""
 
-state = {}
-if state_file:
-    with open(state_file, "r", encoding="utf-8") as f:
-        state = json.load(f)
-
-# Build HTML
-html = "<html><head><title>XEMBRA Dashboard</title>"
-html += "<style>body{font-family:Arial;background:#111;color:#eee;padding:20px;} h1{color:#7fb8a0;} .card{background:#1a1a1a;padding:15px;margin:10px;border-radius:8px;} .row{margin:5px 0;} </style>"
-html += "</head><body>"
-
-html += "<h1>🌿 XEMBRA Heartbeat Dashboard</h1>"
-html += f"<p>Last updated: {datetime.datetime.utcnow().isoformat()} UTC</p>"
-
-# State card
-html += "<div class='card'><h2>Current State</h2>"
-for k,v in state.items():
-    if isinstance(v, (str,int,float)):
-        html += f"<div class='row'><b>{k}:</b> {v}</div>"
-html += "</div>"
-
-# Recent visits
-html += "<div class='card'><h2>Recent Agent Visits</h2>"
-if visits:
-    for v in visits[-10:][::-1]:
-        html += f"<div class='row'>{v.get('time','?')} — <b>{v.get('name','?')}</b>: {v.get('message','')}</div>"
-else:
-    html += "<div class='row'>No visits logged.</div>"
-html += "</div>"
-
-html += "</body></html>"
-
-with open("dashboard/index.html", "w", encoding="utf-8") as f:
+with open("dashboard/index.html", "w") as f:
     f.write(html)
 
 EOF
@@ -81,5 +53,5 @@ EOF
       - name: Commit dashboard
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Update heartbeat dashboard"
+          commit_message: "Update dashboard"
           file_pattern: dashboard/index.html
